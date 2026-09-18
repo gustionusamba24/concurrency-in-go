@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gustionusamba24/concurrency-in-go/concurrency"
+	"github.com/gustionusamba24/concurrency-in-go/pingpong"
 	"github.com/gustionusamba24/concurrency-in-go/select_go"
 )
 
@@ -18,4 +19,10 @@ func main() {
 
 	fmt.Println("Select in Golang")
 	select_go.RunProgram()
+
+	fmt.Println("====================END OF SECTION====================")
+	fmt.Println()
+
+	fmt.Println("PING PONG")
+	pingpong.RunProgram()
 }
