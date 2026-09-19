@@ -2,7 +2,7 @@
 This repository contains examples and explanations of concurrency in Go.
 
 Here are the main topics covered:
-- [Introduction to Concurrency](https://github.com/gustionusamba24/concurrency-in-go/tree/main/concrrency)
+- [Introduction to Concurrency](https://github.com/gustionusamba24/concurrency-in-go/tree/main/concurrency)
 - [Channels](https://github.com/gustionusamba24/concurrency-in-go/tree/main/channel)
 - [More about Channels](https://github.com/gustionusamba24/concurrency-in-go/tree/main/channel_further)
 - [Everything you need to know while using Channels](https://github.com/gustionusamba24/concurrency-in-go/tree/main/channels_review)
