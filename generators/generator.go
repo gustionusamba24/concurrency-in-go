@@ -3,8 +3,38 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"runtime"
+	"sync"
 	"time"
 )
+
+func fanIn[T any](done <-chan int, channels ...<-chan T) <-chan T {
+	var wg sync.WaitGroup
+	fannedInStream := make(chan T)
+
+	transfer := func(c <-chan T) {
+		defer wg.Done()
+		for i := range c {
+			select {
+			case <-done:
+				return
+			case fannedInStream <- i:
+			}
+		}
+	}
+
+	for _, c := range channels {
+		wg.Add(1)
+		go transfer(c)
+	}
+
+	go func() {
+		wg.Wait()
+		close(fannedInStream)
+	}()
+
+	return fannedInStream
+}
 
 func repeatFunc[T any, K any](done <-chan K, fn func() T) <-chan T {
 	stream := make(chan T)
@@ -76,9 +106,18 @@ func main() {
 		return rand.Intn(500000000)
 	}
 	randIntStream := repeatFunc(done, randNumFetcher)
-	primeStream := primeFinder(done, randIntStream)
 
-	for rando := range take(done, primeStream, 10) {
+	// fan out
+	CPUCount := runtime.NumCPU()
+	primeFindersChannel := make([]<-chan int, CPUCount)
+	for i := 0; i < CPUCount; i++ {
+		primeFindersChannel[i] = primeFinder(done, randIntStream)
+	}
+
+	// fan in
+	fannedInStream := fanIn(done, primeFindersChannel...)
+
+	for rando := range take(done, fannedInStream, 10) {
 		fmt.Println(rando)
 	}
 
