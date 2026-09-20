@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"time"
 )
 
 func repeatFunc[T any, K any](done <-chan K, fn func() T) <-chan T {
@@ -37,15 +38,49 @@ func take[T any, K any](done <-chan K, stream <-chan T, num int) <-chan T {
 	return taken
 }
 
+func primeFinder(done <-chan int, randIntStream <-chan int) <-chan int {
+	isPrime := func(randomInt int) bool {
+		for i := randomInt - 1; i > 1; i-- {
+			if randomInt%i == 0 {
+				return false
+			}
+		}
+		return true
+	}
+
+	primes := make(chan int)
+	go func() {
+		defer close(primes)
+		for {
+			select {
+			case <-done:
+				return
+			case randomInt := <-randIntStream:
+				if isPrime(randomInt) {
+					primes <- randomInt
+				}
+			}
+		}
+	}()
+
+	return primes
+}
+
 func main() {
+	start := time.Now()
+
 	done := make(chan int)
 	defer close(done)
 
 	randNumFetcher := func() int {
 		return rand.Intn(500000000)
 	}
+	randIntStream := repeatFunc(done, randNumFetcher)
+	primeStream := primeFinder(done, randIntStream)
 
-	for rando := range take(done, repeatFunc(done, randNumFetcher), 10) {
+	for rando := range take(done, primeStream, 10) {
 		fmt.Println(rando)
 	}
+
+	fmt.Println(time.Since(start))
 }
